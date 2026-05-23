@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 interface Professor {
@@ -12,31 +12,8 @@ export default function ResultsPage() {
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
 
-    const [input, setInput] = useState("")
-    const [results, setResults] = useState<Professor[]>([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState("")
-
-    const fetchProfessors = async (query: string) => {
-        setLoading(true)
-        setError("")
-        try {
-            const response = await fetch(`https://planetterp.com/api/v1/professors?search=${query}&limit=10`)
-            const data = await response.json()
-            setResults(data)
-        } catch {
-            setError("Something went wrong. Please try again.")
-        }
-        setLoading(false)
-    }
-
-    useEffect(() => {
-        const query = searchParams.get("q")
-        if (query) {
-            setInput(query)
-            fetchProfessors(query)
-        }
-    }, [searchParams])
+    const [input, setInput] = useState(searchParams.get("q") || "")
+    const [results] = useState<Professor[]>([])
 
     function handleSearch() {
         if (input.trim() === "") return
@@ -51,38 +28,55 @@ export default function ResultsPage() {
     }
 
     return (
-        <div>
+        <div className="min-h-screen flex flex-col bg-white">
 
-            <div>
-                <button onClick={() => navigate("/")}>Return</button>
-                <input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Enter professor name..."
-                    type="text"
-                />
-                <button onClick={handleSearch}>Search</button>
+            <div className="relative flex items-center justify-center px-8 py-8 border-b border-gray-200">
+                <button
+                    onClick={() => navigate("/")}
+                    className="absolute left-8 text-lg text-gray-600 hover:text-gray-900 whitespace-nowrap"
+                >
+                    ‹ Return
+                </button>
+                <div className="flex w-full max-w-xl">
+                    <input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Enter professor name..."
+                        type="text"
+                        className="flex-1 border border-gray-300 rounded-l px-4 py-2 text-gray-700 text-sm focus:outline-none"
+                    />
+                    <button
+                        onClick={handleSearch}
+                        className="bg-gray-900 text-white px-4 py-2 rounded-r hover:bg-gray-700"
+                    >
+                        Search
+                    </button>
+                </div>
             </div>
 
-            <div>
-                <h2>Search Results</h2>
+            <div className="flex-1 flex flex-col items-center px-8 py-6">
+                <div className="w-full max-w-xl">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Search Results</h2>
 
-                {loading && <p>Loading...</p>}
-                {error && <p>{error}</p>}
-                {!loading && !error && results.length === 0 && <p>No professors found.</p>}
+                    {results.length === 0 && (
+                        <p className="text-gray-500 text-sm">No professors found.</p>
+                    )}
 
-                {results.map((professor) => (
-                    <div key={professor.name}>
-                        <h3>{professor.name}</h3>
-                        <p>Rating: {professor.average_rating ?? "N/A"}</p>
-                        <p>Courses: {professor.courses.slice(0, 5).join(", ")}</p>
+                    <div className="flex flex-col gap-3">
+                        {results.map((professor) => (
+                            <div key={professor.name} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                                <h3 className="font-semibold text-gray-900">{professor.name}</h3>
+                                <p className="text-sm text-gray-500 mt-1">Rating: {professor.average_rating ?? "N/A"}</p>
+                                <p className="text-sm text-gray-500 mt-1">Courses: {professor.courses.slice(0, 5).join(", ")}</p>
+                            </div>
+                        ))}
                     </div>
-                ))}
+                </div>
             </div>
 
-            <div>
-                <p>All data is gathered from the PlanetTerp API</p>
+            <div className="py-4 text-center text-sm text-gray-400">
+                <p>All data is gathered from the <a href="https://planetterp.com" className="text-red-600 hover:underline">PlanetTerp</a> API</p>
             </div>
 
         </div>
